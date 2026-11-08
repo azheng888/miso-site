@@ -256,6 +256,35 @@ body::before { background: var(--bg); }
   .score .board { padding: 24px; }
   .hero { padding-block: 40px 0; }
 }
+
+/* What's in the app: a fan of three phones over drifting words. Scrolls like any other section. */
+.fanwrap { padding-block: 12px 0; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+.fanpanel { position: relative; overflow: hidden; border-radius: 36px; padding-block: 72px 48px; background: linear-gradient(135deg, #e3f4f1 0%, #c9e6ec 45%, #b9cff5 100%); }
+.marquee { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-62%); overflow: hidden; pointer-events: none; }
+.marquee .track { display: flex; width: max-content; animation: drift 60s linear infinite; }
+.marquee span { white-space: pre; font: 500 clamp(96px, 16vw, 220px)/1 var(--display); letter-spacing: -0.04em; color: #a9d6d1; }
+@keyframes drift { to { transform: translateX(-50%); } }
+.fan { position: relative; display: grid; place-items: center; height: calc(var(--fw) * 2.115 + 24px); --fw: min(260px, 46vw); }
+.fan .phone { position: absolute; width: var(--fw); top: 0; left: 50%; margin-left: calc(var(--fw) / -2); transition: transform 0.6s var(--ease); }
+.fan .front { z-index: 2; }
+.fan .side { z-index: 1; width: calc(var(--fw) * 0.88); margin-left: calc(var(--fw) * -0.44); top: calc(var(--fw) * 0.16); }
+.fan .left { transform: translateX(-62%) rotate(-7deg); }
+.fan .right { transform: translateX(62%) rotate(7deg); }
+@media (hover: hover) {
+  .fan:hover .left { transform: translateX(-72%) rotate(-9deg); }
+  .fan:hover .right { transform: translateX(72%) rotate(9deg); }
+}
+.fancaps { list-style: none; margin: 40px auto 0; padding: 0 max(20px, env(safe-area-inset-left, 0px)) 0 max(20px, env(safe-area-inset-right, 0px)); max-width: 960px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; text-align: center; position: relative; }
+.fancaps li { color: var(--muted); font-size: 16px; line-height: 1.4; }
+.fancaps b { display: block; color: var(--text); font: 500 20px/1.2 var(--display); margin-bottom: 4px; }
+@media (max-width: 760px) {
+  .fanpanel { padding-block: 48px 32px; border-radius: 28px; }
+  .fan { --fw: min(200px, 50vw); }
+  .fan .left { transform: translateX(-48%) rotate(-7deg); }
+  .fan .right { transform: translateX(48%) rotate(7deg); }
+  .fancaps { grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 28px; }
+}
+@media (prefers-reduced-motion: reduce) { .marquee .track { animation: none; } }
 </style>
 </head>
 <body>
@@ -280,24 +309,19 @@ body::before { background: var(--bg); }
     </div>
   </section>
 
-  <section class="story" id="story" aria-label="What's in the app">
-    <div class="stage">
-      <div class="words" aria-hidden="true">
-        <span class="word">to-dos</span>
-        <span class="word">calendars</span>
-        <span class="word">groceries</span>
-        <span class="word">the matchup</span>
+  <section class="fanwrap" aria-label="What's in the app">
+    <div class="fanpanel">
+      <div class="marquee" aria-hidden="true"><div class="track"><span>to-dos · calendars · groceries · the matchup · </span><span>to-dos · calendars · groceries · the matchup · </span></div></div>
+      <div class="fan">
+        <div class="phone side left"><div class="screen"><img src="img/calendar.jpg" alt="Calendar screen with both people's events" loading="lazy"></div></div>
+        <div class="phone side right"><div class="screen"><img src="img/fantasy.jpg" alt="Fantasy matchup with points for sleep, steps and to-dos" loading="lazy"></div></div>
+        <div class="phone front"><div class="screen"><img src="img/todos.jpg" alt="To-Dos screen with a quick add field and shared to-dos" loading="lazy"></div></div>
       </div>
-      <div class="phone"><div class="screen">
-        <img src="img/todos.jpg" alt="To-Dos screen with a quick add field and shared to-dos">
-        <img src="img/calendar.jpg" alt="Calendar screen with both people's events" style="opacity:0">
-        <img src="img/shopping.jpg" alt="Shopping list grouped by store" style="opacity:0">
-        <img src="img/fantasy.jpg" alt="Fantasy matchup with points for sleep, steps and to-dos" style="opacity:0">
-      </div></div>
-      <div class="caption">
-        <p id="story-caption">Check off the bins and your partner's phone knows.</p>
-        <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
-      </div>
+      <ul class="fancaps">
+        <li><b>Both calendars</b>From your iPhone or Google, side by side.</li>
+        <li><b>Shared to-dos</b>Check one off and your partner's phone knows.</li>
+        <li><b>The matchup</b>Sleep, steps and to-dos, scored every week.</li>
+      </ul>
     </div>
   </section>
 
@@ -412,9 +436,9 @@ body::before { background: var(--bg); }
 
   // Story: the phone swaps screens and a giant word slides past behind it.
   const story = document.getElementById("story");
-  const words = [...story.querySelectorAll(".word")];
-  const shots = [...story.querySelectorAll(".screen img")];
-  const dots = [...story.querySelectorAll(".dots i")];
+  const words = story ? [...story.querySelectorAll(".word")] : [];
+  const shots = story ? [...story.querySelectorAll(".screen img")] : [];
+  const dots = story ? [...story.querySelectorAll(".dots i")] : [];
   const caption = document.getElementById("story-caption");
   const captions = [
     "Check off the bins and your partner's phone knows.",
@@ -424,7 +448,7 @@ body::before { background: var(--bg); }
   ];
   let step = -1;
   function setStep(i) {
-    if (i === step) return;
+    if (!story || i === step) return;
     step = i;
     shots.forEach((img, k) => { img.style.opacity = k === i ? 1 : 0; });
     dots.forEach((d, k) => d.classList.toggle("on", k === i));
@@ -455,6 +479,7 @@ body::before { background: var(--bg); }
   function onScroll() {
     const vh = innerHeight;
     // Story
+    if (story) {
     const r = story.getBoundingClientRect();
     const total = r.height - vh;
     const p = Math.min(Math.max(-r.top / total, 0), 0.9999);
@@ -466,6 +491,7 @@ body::before { background: var(--bg); }
       const x = k === i ? (0.5 - local) * 140 : (k < i ? -140 : 140);
       w.style.transform = `translateX(${x}vw)`;
     });
+    }
     // Read-along
     const rr = read.getBoundingClientRect();
     const rp = Math.min(Math.max((vh * 0.75 - rr.top) / (rr.height + vh * 0.25), 0), 1);
